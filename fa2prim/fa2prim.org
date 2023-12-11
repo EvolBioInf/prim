@@ -1,0 +1,341 @@
+#+begin_src latex
+  \section{Introduction}
+  The program \ty{fa2prim} automates the conversion of FASTA templates
+  to \ty{primer3} input. Figure~\ref{fig:primIn} shows an abridged
+  example of output by \ty{fa2prim}.
+  \begin{figure}
+    \begin{center}
+      \verbatiminput{../fa2prim/primIn.txt}
+    \end{center}
+    \caption{Output by \ty{fa2prim}, which then serves as input to
+      \ty{primer3}.}\label{fig:primIn}
+  \end{figure}
+
+  \section{Implementation}
+  The outline of \ty{fa2prim} has hooks for imports, types, functions,
+  and the logic of the main function.  \bpr{fa2prim}{pr:f2p}
+#+end_src
+#+begin_src go <<fa2prim.go>>=
+  package main
+
+  import (
+	  //<<Imports, Pr. \ref{pr:f2p}>>
+  )
+
+  //<<Types, Pr. \ref{pr:f2p}>>
+  //<<Functions, Pr. \ref{pr:f2p}>>
+  func main() {
+	  //<<Main function, Pr. \ref{pr:f2p}>>
+  }
+#+end_src
+#+begin_src latex
+  \epr
+  In the main function we set the name of \ty{fa2prim}, set the usage,
+  declare and parse the options, and parse the input.
+#+end_src
+#+begin_src go <<Main function, Pr. \ref{pr:f2p}>>=
+  util.SetName("fa2prim")
+  //<<Set usage, Pr. \ref{pr:f2p}>>
+  //<<Declare options, Pr. \ref{pr:f2p}>>
+  //<<Parse options, Pr. \ref{pr:f2p}>>
+  //<<Parse input, Pr. \ref{pr:f2p}>>
+#+end_src
+#+begin_export latex
+We import \ty{util}.
+#+end_export
+#+begin_src go <<Imports, Pr. \ref{pr:f2p}>>=
+  "github.com/evolbioinf/prim/util"
+#+end_src
+#+begin_export latex
+The usage consists of the actual usage message, an explanation of the
+purpose of \ty{fa2prim}, and an example command.
+#+end_export
+#+begin_src go <<Set usage, Pr. \ref{pr:f2p}>>=
+  u := "fa2prim [option]... [template.fasta]..."
+  p := "Convert FASTA sequences to primer3 input."
+  e := "fa2prim foo.fasta | primer3_core"
+  clio.Usage(u, p, e)
+#+end_src
+#+begin_export latex
+We import \ty{clio}.
+#+end_export
+#+begin_src go <<Imports, Pr. \ref{pr:f2p}>>=
+  "github.com/evolbioinf/clio"
+#+end_src
+#+begin_export latex
+We declare the obligatory version option and options to drive
+\ty{primer3}.
+#+end_export
+#+begin_src go <<Declare options, Pr. \ref{pr:f2p}>>=
+  optV := flag.Bool("v", false, "version")
+  //<<Options for \ty{primer3}, Pr. \ref{pr:f2p}>>
+#+end_src
+#+begin_export latex
+We import \ty{flag}.
+#+end_export
+#+begin_src go <<Imports, Pr. \ref{pr:f2p}>>=
+  "flag"
+#+end_src
+#+begin_export latex
+We declare the 10 options for \ty{primer3} listed in
+Table~\ref{tab:primer3} together with their default values.
+\begin{table}
+  \caption{Options for driving \ty{primer3} and their default
+    values.}\label{tab:primer3}
+  \begin{center}
+    \begin{tabular}{lll}
+      \hline
+      Option & Meaning & Default\\\hline
+      \ty{primMinSize} & minimum primer size & 15\\
+      \ty{primMaxSize} & maximum primer size & 25\\
+      \ty{prodMinSize} & minimum product size & 70\\
+      \ty{prodMaxSize} & maximum product size & 150\\
+      \ty{primMinTm} & minimum primer melting temperature & 54\\
+      \ty{primOptTm} & optimal primer melting temperature & 56\\
+      \ty{primMaxTm} & maximal primer melting temperature & 58\\
+      \ty{inMinTm} & internal oligo minimum melting temperature & 43\\
+      \ty{inOptTm} & internal oligo optimal melting temperature & 45\\
+      \ty{inMaxTm} & internal oligo maximum melting temperature & 47\\
+      \hline
+  \end{center}
+\end{table}
+#+end_export
+#+begin_src go <<Options for \ty{primer3}, Pr. \ref{pr:f2p}>>=
+  primMinSize := flag.Int("primMinSize", 15, "minimum primer size")
+  primMaxSize := flag.Int("primMaxSize", 25, "maximum primer size")
+  prodMinSize := flag.Int("prodMinSize", 70, "minimum product size")
+  prodMaxSize := flag.Int("prodMaxSize", 150, "maximum product size")
+  primMinTm := flag.Float64("primMinTm", 54, "minimum primer T_m")
+  primOptTm := flag.Float64("primOptTm", 56, "optimal primer T_m")
+  primMaxTm := flag.Float64("primMaxTm", 58, "maximum primer T_m")
+  inMinTm := flag.Float64("inMinTm", 43, "minimum internal oligo T_m")
+  inOptTm := flag.Float64("inOptTm", 45, "optimal internal oligo T_m")
+  inMaxTm := flag.Float64("inMaxTm", 47, "maximum internal oligo T_m")
+#+end_src
+#+begin_export latex
+We parse the options and respond to a version request, as this stops
+\ty{fa2prim}. We also store the options for the \ty{primer3} run.
+#+end_export
+#+begin_src go <<Parse options, Pr. \ref{pr:f2p}>>=
+  flag.Parse()
+  if *optV {
+	  util.Version()
+  }
+  //<<Store options for \ty{primer3}, Pr. \ref{pr:f2p}>>
+#+end_src
+#+begin_export latex
+To store the parameters for \ty{primer3}, we declare the \ty{struct}
+\ty{Parameters}.
+#+end_export
+#+begin_src go <<Types, Pr. \ref{pr:f2p}>>=
+  type Parameters struct {
+	  primMinSize, primMaxSize,
+	  prodMinSize, prodMaxSize int
+	  primMinTm, primOptTm, primMaxTm,
+	  inMinTm, inOptTm, inMaxTm float64
+  }
+#+end_src
+#+begin_export latex
+We store the options.
+#+end_export
+#+begin_src go <<Store options for \ty{primer3}, Pr. \ref{pr:f2p}>>=
+  pa := new(Parameters)
+  pa.primMinSize = *primMinSize
+  pa.primMaxSize = *primMaxSize
+  pa.prodMinSize = *prodMinSize
+  pa.prodMaxSize = *prodMaxSize
+  pa.primMinTm = *primMinTm
+  pa.primOptTm = *primOptTm
+  pa.primMaxTm = *primMaxTm
+  pa.inMinTm = *inMinTm
+  pa.inOptTm = *inOptTm
+  pa.inMaxTm = *inMaxTm
+#+end_src
+#+begin_export latex
+The remaining tokens in the command line are taken as file names. We
+parse these files using \ty{ParseFiles}, which applies the function
+\ty{parse} to each one. Parse, in turn, takes the parameters for
+\ty{primer3} as parameter.
+#+end_export
+#+begin_src go <<Parse input, Pr. \ref{pr:f2p}>>=
+  files := flag.Args()
+  clio.ParseFiles(files, parse, pa)
+#+end_src
+#+begin_export latex
+Inside \ty{parse} we retrieve the parameter container. The we iterate
+over the sequences in the current input file. For each file we print a
+set of \ty{primer3} instructions.
+#+end_export
+#+begin_src go <<Functions, Pr. \ref{pr:f2p}>>=
+  func parse(r io.Reader, args ...interface{}) {
+	  p := args[0].(*Parameters)
+	  sc := fasta.NewScanner(r)
+	  for sc.ScanSequence() {
+		  s := string(sc.Sequence().Data())
+		  //<<Print \ty{primer3} input, Pr. \ref{pr:f2p}>>
+	  }
+  }
+#+end_src
+#+begin_export latex
+We import \ty{io} and \ty{fasta}.
+#+end_export
+#+begin_src go <<Imports, Pr. \ref{pr:f2p}>>=
+  "io"
+  "github.com/evolbioinf/fasta"
+#+end_src
+#+begin_export latex
+The input to \ty{primer3} consists of a constant and a variable part
+terminated by \ty{=}.
+#+end_export
+#+begin_src go <<Print \ty{primer3} input, Pr. \ref{pr:f2p}>>=
+  //<<Print constant \ty{primer3} input, Pr. \ref{pr:f2p}>>
+  //<<Print variable \ty{primer3} input, Pr. \ref{pr:f2p}>>
+  fmt.Println("=")
+#+end_src
+#+begin_export latex
+We import \ty{fmt}.
+#+end_export
+#+begin_src go <<Imports, Pr. \ref{pr:f2p}>>=
+  "fmt"
+#+end_src
+#+begin_export latex
+In the constant part of the instruction block we ask for pairs of
+primers, each augmented by an internal oligo.
+#+end_export
+#+begin_src go <<Print constant \ty{primer3} input, Pr. \ref{pr:f2p}>>=
+  fmt.Println("PRIMER_TASK=generic")
+  fmt.Println("PRIMER_PICK_LEFT_PRIMER=1")
+  fmt.Println("PRIMER_PICK_RIGHT_PRIMER=1")
+  fmt.Println("PRIMER_PICK_INTERNAL_OLIGO=1")
+#+end_src
+#+begin_export latex
+In the variable part of the instruction block we set the lengths of
+the primer and the product, the melting temperatures of the primers
+and the internal oligo, and the template sequence.
+#+end_export
+#+begin_src go <<Print variable \ty{primer3} input, Pr. \ref{pr:f2p}>>=
+  fmt.Printf("PRIMER_MIN_SIZE=%d\n", p.primMinSize)
+  fmt.Printf("PRIMER_MAX_SIZE=%d\n", p.primMaxSize)
+  fmt.Printf("PRIMER_PRODUCT_SIZE_RANGE=%d-%d\n",
+	  p.prodMinSize, p.prodMaxSize)
+  fmt.Printf("PRIMER_MIN_TM=%.1f\n", p.primMinTm)
+  fmt.Printf("PRIMER_OPT_TM=%.1f\n", p.primOptTm)
+  fmt.Printf("PRIMER_MAX_TM=%.1f\n", p.primMaxTm)
+  fmt.Printf("PRIMER_INTERNAL_MIN_TM=%.1f\n", p.inMinTm)
+  fmt.Printf("PRIMER_INTERNAL_OPT_TM=%.1f\n", p.inOptTm)
+  fmt.Printf("PRIMER_INTERNAL_MAX_TM=%.1f\n", p.inMaxTm)
+  fmt.Printf("SEQUENCE_TEMPLATE=%s\n", s)
+#+end_src
+#+begin_export latex
+We've finished \ty{fa2prim}, time to test it.
+\section{Testing}
+Our program for testing \ty{fa2prim} has hooks for imports and the
+testing logic.
+#+end_export
+#+begin_src go <<fa2prim_test.go>>=
+  package main
+
+  import (
+	  "testing"
+	  //<<Testing imports, Pr. \ref{pr:f2p}>>
+  )
+
+  func TestFa2prim(t *testing.T) {
+	  //<<Testing, Pr. \ref{pr:f2p}>>
+  }
+#+end_src
+#+begin_export latex
+We construct a set of tests and run them.
+#+end_export
+#+begin_src go <<Testing, Pr. \ref{pr:f2p}>>=
+  var tests []*exec.Cmd
+  //<<Construct tests, Pr. \ref{pr:f2p}>>
+  for i, test := range tests {
+	  //<<Run test, Pr. \ref{pr:f2p}>>
+  }
+#+end_src
+#+begin_export latex
+We import \ty{exec}.
+#+end_export
+#+begin_src go <<Testing imports, Pr. \ref{pr:f2p}>>=
+  "os/exec"
+#+end_src
+#+begin_export latex
+All our tests take as input the random DNA sequence
+\ty{test.fasta}. Our first test analyzes this using only default
+options.
+#+end_export
+#+begin_src go <<Construct tests, Pr. \ref{pr:f2p}>>=
+  f := "./test.fasta"
+  test := exec.Command("./fa2prim", f)
+  tests = append(tests, test)
+#+end_src
+#+begin_export latex
+In the next three tests we vary the melting temperature of the
+internal oligo.
+#+end_export
+#+begin_src go <<Construct tests, Pr. \ref{pr:f2p}>>=
+  test = exec.Command("./fa2prim", "-inMaxTm", "48", f)
+  tests = append(tests, test)
+  test = exec.Command("./fa2prim", "-inMinTm", "44", f)
+  tests = append(tests, test)
+  test = exec.Command("./fa2prim", "-inOptTm", "46", f)
+  tests = append(tests, test)
+#+end_src
+#+begin_export latex
+In the next three tests we vary the melting temperature of the
+primers.
+#+end_export
+#+begin_src go <<Construct tests, Pr. \ref{pr:f2p}>>=
+  test = exec.Command("./fa2prim", "-primMaxTm", "59", f)
+  tests = append(tests, test)
+  test = exec.Command("./fa2prim", "-primMinTm", "55", f)
+  tests = append(tests, test)
+  test = exec.Command("./fa2prim", "-primOptTm", "57", f)
+  tests = append(tests, test)
+#+end_src
+#+begin_export latex
+In the next two tests we vary the primer length.
+#+end_export
+#+begin_src go <<Construct tests, Pr. \ref{pr:f2p}>>=
+  test = exec.Command("./fa2prim", "-primMaxSize", "26", f)
+  tests = append(tests, test)
+  test = exec.Command("./fa2prim", "-primMinSize", "16", f)
+  tests = append(tests, test)
+#+end_src
+#+begin_export latex
+In our last two tests we vary the product size.
+#+end_export
+#+begin_src go <<Construct tests, Pr. \ref{pr:f2p}>>=
+  test = exec.Command("./fa2prim", "-prodMaxSize", "151", f)
+  tests = append(tests, test)
+  test = exec.Command("./fa2prim", "-prodMinSize", "71", f)
+  tests = append(tests, test)
+#+end_src
+#+begin_export latex
+We run a test and compare the result we get with the result we want,
+which is contained in files \ty{r1.txt}, \ty{r2.txt}, and so on.
+#+end_export
+#+begin_src go <<Run test, Pr. \ref{pr:f2p}>>=
+  get, err := test.Output()
+  if err != nil {
+	  t.Error(err)
+  }
+  f := "r" + strconv.Itoa(i+1) + ".txt"
+  want, err := os.ReadFile(f)
+  if err != nil {
+	  t.Error(err)
+  }
+  if !bytes.Equal(get, want) {
+	  t.Errorf("get:\n%s\nwant:\n%s\n", get, want)
+  }
+#+end_src
+#+begin_export latex
+We import \ty{strconv}, \ty{os}, and \ty{bytes}.
+#+end_export
+#+begin_src go <<Testing imports, Pr. \ref{pr:f2p}>>=
+  "strconv"
+  "os"
+  "bytes"
+#+end_src
+

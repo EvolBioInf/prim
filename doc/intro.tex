@@ -1,0 +1,20 @@
+The package \ty{prim} consists of four programs for designing and
+scoring diagnostic PCR primers. Table~\ref{tab:pro} lists the
+programs, of which the first two, \ty{fa2prim} and \ty{prim2tab}
+support the design of primers with \ty{primer3}~\cite{unt12:pri},
+while the second two, \ty{scop} and \ty{cops}, are used calculate the
+sensitivity and specificity of primers.
+
+\begin{table}
+  \caption{}\label{tab:pro}
+  \begin{center}
+    \begin{tabular}{ll}
+      \hline
+      Program & Description\\\hline
+      \ty{fa2prim} & Convert template sequence to \ty{primer3} input\\
+      \ty{prim2tab} & Convert \ty{primer3} output to table\\
+      \ty{scop} & Score primers by sensitivity and specificity\\
+      \ty{cops} & Correct primer scores\\\hline
+    \end{tabular}
+  \end{center}
+\end{table}

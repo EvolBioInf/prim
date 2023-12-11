@@ -1,0 +1,157 @@
+#+begin_src latex
+  \section{\ty{util}}
+  The package \ty{util} collects utility functions. Its outline
+  provides hooks for imports, variables, and functions.
+  \bpa{util}{pa:util}
+#+end_src
+#+begin_src go <<util.go>>=
+  // Package util provides utility functions for the programs
+  // indexNeighbors and neighbors.
+  package util
+
+  import (
+	  //<<Imports, Pa.~\ref{pa:util}>>
+  )
+  //<<Variables, Pa.~\ref{pa:util}>>
+  //<<Functions, Pa.~\ref{pa:util}>>
+#+end_src
+#+begin_src latex
+  \epa
+  \subsection{\ty{PrintInfo}}
+  !\ty{PrintInfo} prints program information and exits.
+#+end_src
+#+begin_src go <<Functions, Pa.~\ref{pa:util}>>=
+  func PrintInfo(program string) {
+	  author := "Bernhard Haubold"
+	  email := "haubold@evolbio.mpg.de"
+	  license := "Gnu General Public License, " +
+		  "https://www.gnu.org/licenses/gpl.html"
+	  clio.PrintInfo(program, version, date,
+		  author, email, license)
+	  os.Exit(0)
+  }
+#+end_src
+#+begin_src latex
+  We declare the variables \ty{version} and \ty{date}, which ought to be
+  injected at compile time.
+#+end_src
+#+begin_src go <<Variables, Pa.~\ref{pa:util}>>=
+  var version, date string
+#+end_src
+#+begin_src latex 
+  We import \ty{clio} and \ty{os}.
+#+end_src
+#+begin_src go <<Imports, Pa.~\ref{pa:util}>>=
+  "github.com/evolbioinf/clio"
+  "os"
+#+end_src
+#+begin_src latex
+  \subsection{\ty{Open}}
+  !\ty{Open} opens a file with error checking.
+#+end_src
+#+begin_src go <<Functions, Pa.~\ref{pa:util}>>=
+  func Open(file string) *os.File {
+	  f, err := os.Open(file)
+	  if err != nil {
+		  fmt.Fprintf(os.Stderr, "couldn't open %s\n", file)
+		  os.Exit(1)
+	  }
+	  return f
+  }
+#+end_src
+#+begin_src latex
+  We import \ty{fmt} and \ty{os}.
+#+end_src
+#+begin_src go <<Imports, Pa.~\ref{pa:util}>>=
+  "fmt"
+  "os"
+#+end_src
+#+begin_export latex
+\subsubsection{\ty{Check}}
+!\ty{Check} checks an error and aborts if it isn't nil.
+#+end_export
+#+begin_src go <<Functions, Pa.~\ref{pa:util}>>=
+  func Check(err error) {
+	  if err != nil {
+		  log.Fatal(err)
+	  }
+  }
+#+end_src
+#+begin_export latex
+We import \ty{log}.
+#+end_export
+#+begin_src go <<Imports, Pa.~\ref{pa:util}>>=
+  "log"
+#+end_src
+#+begin_export latex
+\subsection{\ty{SetName}}
+!The function \ty{SetName} sets the name of the program.
+It stores the name in a global variable and prepares the \ty{log}
+package to print that name in the event of an error message.
+#+end_export
+#+begin_src go <<Functions, Pa.~\ref{pa:util}>>=
+  func SetName(n string) {
+	  name = n
+	  s := fmt.Sprintf("%s: ", n)
+	  log.SetPrefix(s)
+	  log.SetFlags(0)
+  }
+#+end_src
+#+begin_export latex
+We declare the global string variable \ty{name}.
+#+end_export
+#+begin_src go <<Variables, Pa.~\ref{pa:util}>>=
+  var name string
+#+end_src
+#+begin_export latex
+\subsection{\ty{Version}}
+!The function \ty{Version} prints the version and other information
+!about the program and exits.
+\ty{Version} simply wraps a call to \ty{PrintInfo}.
+#+end_export
+#+begin_src go <<Functions, Pa.~\ref{pa:util}>>=
+  func Version() {
+	  PrintInfo(name)
+  }
+#+end_src
+#+begin_src latex
+  We are done with the \ty{util} package, time to test it.
+  \subsection{Testing}
+  Our testing code for \ty{util} contains hooks for imports and the
+  logic of the testing function.
+#+end_src
+#+begin_src go <<util_test.go>>=
+  package util
+
+  import (
+	  "testing"
+	  //<<Testing imports, Pa.~\ref{pa:util}>>
+  )
+
+  func TestUtil(t *testing.T) {
+	  //<<Testing, Pa.~\ref{pa:util}>>
+  }
+#+end_src
+#+begin_src latex
+  There is only one function we can sensibly test, \ty{Open}. So we open
+  a test file and read the string ``success'' from it.
+#+end_src
+#+begin_src go <<Testing, Pa.~\ref{pa:util}>>=
+  f := Open("r.txt")
+  defer f.Close()
+  sc := bufio.NewScanner(f)
+  if !sc.Scan() {
+	  t.Error("scan failed")
+  }
+  get := sc.Text()
+  want := "success"
+  if get != want {
+	  t.Errorf("get:\n%s\nwant:\n%s\n", get, want)
+  }
+#+end_src
+#+begin_src latex
+  We import \ty{bufio}.
+#+end_src
+#+begin_src go <<Testing imports, Pa.~\ref{pa:util}>>=
+  "bufio"
+#+end_src
