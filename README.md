@@ -1,8 +1,9 @@
-# `prim`: Design and Test PCR Primers
+# `prim`: Designing and Testing PCR Primers
 ## Description
-The package `prim` contains programs for designing and testing
-primers. Primer design builds on the program
-[`primer3`](https://primer3.org/), primer testing on [Blast](https://blast.ncbi.nlm.nih.gov/).
+The repo `prim` contains programs for designing and testing
+primers. Primer design is built on the program
+[`primer3`](https://primer3.org/), primer testing on
+[Blast](https://blast.ncbi.nlm.nih.gov/).
 ## Author
 [Bernhard Haubold](http://guanine.evolbio.mpg.de/), `haubold@evolbio.mpg.de`
 ## Make the Programs

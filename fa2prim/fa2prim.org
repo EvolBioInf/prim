@@ -1,5 +1,5 @@
 #+begin_src latex
-  \section{Introduction}
+  \section*{Introduction}
   The program \ty{fa2prim} automates the conversion of FASTA templates
   to \ty{primer3} input. Figure~\ref{fig:primIn} shows an abridged
   example of output by \ty{fa2prim}.
@@ -11,7 +11,7 @@
       \ty{primer3}.}\label{fig:primIn}
   \end{figure}
 
-  \section{Implementation}
+  \section*{Implementation}
   The outline of \ty{fa2prim} has hooks for imports, types, functions,
   and the logic of the main function.  \bpr{fa2prim}{pr:f2p}
 #+end_src
@@ -97,6 +97,7 @@ Table~\ref{tab:primer3} together with their default values.
       \ty{inOptTm} & internal oligo optimal melting temperature & 45\\
       \ty{inMaxTm} & internal oligo maximum melting temperature & 47\\
       \hline
+    \end{tabular}
   \end{center}
 \end{table}
 #+end_export
@@ -228,7 +229,7 @@ and the internal oligo, and the template sequence.
 #+end_src
 #+begin_export latex
 We've finished \ty{fa2prim}, time to test it.
-\section{Testing}
+\section*{Testing}
 Our program for testing \ty{fa2prim} has hooks for imports and the
 testing logic.
 #+end_export

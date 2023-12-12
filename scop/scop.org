@@ -1,5 +1,5 @@
 #+begin_export latex
-\section{Introduction}
+\section*{Introduction}
 Before using PCR primers \emph{in vitro}, it is wise to
 estimate their sensitivity and specificity through digital PCR against
 a large database. The program \ty{scop} scores primers by calculating
@@ -54,7 +54,7 @@ TruePositives:  AP018488.1 BA000007.3...
 FalsePositives: AE005174.2 AP026080.1...
 \end{verbatim}
 
-\section{Implementation}
+\section*{Implementation}
 The outline of \ty{scop} contains hooks for imports, types, methods,
 functions, and the logic of the main function.  \bpr{scop}{pr:sco}
 #+end_export
@@ -647,7 +647,7 @@ We finally list the sorted false negatives as a blank-delimited row.
 #+end_src
 #+begin_export latex
 We are finished with \ty{scop}, time to test it.
-\section{Testing}
+\section*{Testing}
 Our test for \ty{scop} contains hooks for imports and the testing
 logic.
 #+end_export
