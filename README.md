@@ -1,9 +1,7 @@
-# `prim`: Designing and Testing PCR Primers
+# `prim`
 ## Description
 Programs for designing and testing
-primers. Primer design is built on the program
-[`primer3`](https://primer3.org/), primer testing on
-[Blast](https://blast.ncbi.nlm.nih.gov/).
+primers.
 ## Author
 [Bernhard Haubold](http://guanine.evolbio.mpg.de/), `haubold@evolbio.mpg.de`
 ## Make the Programs
