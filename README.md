@@ -1,6 +1,6 @@
 # `prim`: Designing and Testing PCR Primers
 ## Description
-The repo `prim` contains programs for designing and testing
+Programs for designing and testing
 primers. Primer design is built on the program
 [`primer3`](https://primer3.org/), primer testing on
 [Blast](https://blast.ncbi.nlm.nih.gov/).
@@ -8,7 +8,7 @@ primers. Primer design is built on the program
 [Bernhard Haubold](http://guanine.evolbio.mpg.de/), `haubold@evolbio.mpg.de`
 ## Make the Programs
 Make sure you've installed the packages `git`, `golang`,
-`make`, `ncbi-blast+`, `phylonium`, `primer3`, and `noweb`. Then make the programs.  
+`make`, `ncbi-blast+`, `noweb`, `phylonium`, and `primer3`. Then make the programs.  
   `$ make`  
   The directory `bin` now contains the binaries, scripts are in
   `scripts`.
