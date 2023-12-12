@@ -18,10 +18,17 @@ doc/tutorial.tex
 doc/util.tex
 doc/version.txt
 
-# Programs
+# Programs and data files
 cops/cops
 cops/makeRes.sh
 fa2prim/fa2prim
 fa2prim/makeRes.sh
 prim2tab/prim2tab
 scop/scop
+tutorial/tut.sh
+tutorial/cops.out
+tutorial/prim.fasta
+tutorial/prim.in
+tutorial/prim.out
+tutorial/scop.out
+

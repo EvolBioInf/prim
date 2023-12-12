@@ -3,22 +3,22 @@
 \begin{document}
 \pagestyle{noweb}
 
-\title{\ty{prim}: Design and Test PCR Primers}
+\title{\ty{prim}: Designing and Testing PCR Primers}
 \author{Bernhard Haubold}
-\date{\input{date.txt}\!\!, \input{version.txt}}
+\date{\input{date.txt}\hspace{-0.11cm}, \input{version.txt}}
 \maketitle
 
 \tableofcontents
 
 \chapter{Introduction}
 \input{intro}
-\chapter{Convert Primer Sequences to \ty{primer3} Input: \texttt{fa2prim}}
+\chapter{\ty{fa2prim}: Convert Primer Sequences to \ty{primer3} Input}
 \input{fa2prim}
-\chapter{Convert \ty{primer3} Output to Table: \texttt{prim2tab}}
+\chapter{\ty{prim2tab}: Convert \ty{primer3} Output to Table}
 \input{prim2tab}
-\chapter{Score Primers: \texttt{scop}}
+\chapter{\ty{scop}: Score Primers}
 \input{scop}
-\chapter{Correct Primer Scores: \ty{cops}}
+\chapter{\ty{cops}: Correct Primer Scores}
 \input{cops}
 \chapter{Package \ty{util}}
 \input{util}

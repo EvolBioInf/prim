@@ -1,0 +1,179 @@
+#+begin_export latex
+\section*{Find Primers}
+The file \ty{tutorial/template.fasta} contains two short template
+sequences deemed diagnostic for \emph{Escherichia coli} serovar
+O157:H7. We convert the sequences to input for \ty{primer3}.
+#+end_export
+#+begin_src sh <<tut.sh>>=
+  fa2prim template.fasta > prim.in
+#+end_src
+#+begin_export latex
+We construct primers using \ty{primer3}.
+#+end_export
+#+begin_src sh <<tut.sh>>=
+  primer3_core prim.in > prim.out
+#+end_src
+#+begin_export latex
+We extract the primers into a table.
+#+end_export
+#+begin_src sh <<tut.sh>>=
+  prim2tab prim.out
+#+end_src
+#+begin_export latex
+\small
+\begin{verbatim}
+# Penalty  Forward                 Reverse               Internal
+1.320714   CGGCAATATCATAGACATCGT   AACGATTATGTGTGGGCAAA  TCACGACGATAATTATCTTT
+1.592652   TCGGCAATATCATAGACATCG   AACGATTATGTGTGGGCAAA  TCACGACGATAATTATCTTT
+1.826015   TCGGCAATATCATAGACATCG   ACGATTATGTGTGGGCAAAT  TCACGACGATAATTATCTTT
+2.081523   ATCGGCAATATCATAGACATCG  AACGATTATGTGTGGGCAAA  TCACGACGATAATTATCTTT
+2.194407   CGGCAATATCATAGACATCGT   TAACGATTATGTGTGGGCAA  TCACGACGATAATTATCTTT
+1.181309   GTAGTATCAGAAGAGAACGCG   AGTATTGGTTGTCAGGAGCT  CTAGTCCATAAGCAAGAAAA
+1.682847   GTAGTATCAGAAGAGAACGCG   AAGTATTGGTTGTCAGGAGC  CTAGTCCATAAGCAAGAAAA
+2.164691   TAGTATCAGAAGAGAACGCG    AAGTATTGGTTGTCAGGAGC  CTAGTCCATAAGCAAGAAAA
+2.213344   TGTAGTATCAGAAGAGAACGC   GTATTGGTTGTCAGGAGCTG  CTAGTCCATAAGCAAGAAAA
+2.222044   TGTAGTATCAGAAGAGAACGC   AGTATTGGTTGTCAGGAGCT  CTAGTCCATAAGCAAGAAAA
+\end{verbatim}
+\normalsize We sort by the penalty and pick the forward and reverse
+primer with the lowest penalty. (We ignore the internal oligo in this
+Tutorial.)
+#+end_export
+#+begin_src sh <<tut.sh>>=
+  prim2tab prim.out |
+      tail -n +2 |
+      sort -n |
+      head -n 1 |
+      awk '{printf ">f\n%s\n>r\n%s\n", $2, $3}'
+#+end_src
+#+begin_export latex
+\begin{verbatim}
+>f
+GTAGTATCAGAAGAGAACGCG
+>r
+AGTATTGGTTGTCAGGAGCT
+\end{verbatim}
+We save the primer pair to a file.
+#+end_export
+#+begin_src sh <<tut.sh>>=
+  prim2tab prim.out |
+      tail -n +2 |
+      sort -n |
+      head -n 1 |
+      awk '{printf ">f\n%s\n>r\n%s\n", $2, $3}' > prim.fasta
+#+end_src
+#+begin_export latex
+We are done designing the primers. Of course, we could have carried
+out the above steps all in one pipeline.
+#+end_export
+#+begin_src sh <<tut.sh>>=
+  fa2prim template.fasta |
+      primer3_core |
+      prim2tab |
+      tail -n +2 |
+      sort -n |
+      head -n 1 |
+      awk '{printf ">f\n%s\n>r\n%s\n", $2, $3}' > prim.fasta
+#+end_src
+#+begin_export latex
+\section*{Test Primers}
+We test a set of primers by running them against a large DNA sequence
+database, for example, the non-redundant collection of nucleotide
+sequences provided by the NCBI. However, for the purposes of this
+tutorial we work with a much abridged database, which we download into
+the \ty{data} folder and unpack.
+#+end_export
+#+begin_src sh <<tut.sh>>=
+  wget guanine.evolbio.mpg.de/prim/sample.tgz
+  mv sample.tgz ../data
+  cd ../data
+  tar -xvzf sample.tgz
+  cd ../tutorial
+#+end_src
+#+begin_export latex
+We calculate the sensitivity and specificity of our primers based on
+the accuracy with which they amplify the target taxa listed by their
+taxon IDs in the file \ty{tarTax.txt}. These taxa all belong to
+\emph{E. coli} O157:H7 and were obtained using
+\ty{neighbors}\footnote{github.com/evolbioinf/neighbors}. However,
+they could also be obtained using the webbrowser of the NCBI
+taxonomy\footnote{https://www.ncbi.nlm.nih.gov/taxonomy}. We find no
+false negatives, so our sensitivity is maximal. However, there appear
+to be more false positives than true positives, hence our specificity
+is a rather low 0.479.
+#+end_export
+#+begin_src sh <<tut.sh>>=
+  scop -d ../data/sample -t tarTax.txt prim.fasta
+#+end_src
+#+begin_export latex
+\begin{verbatim}
+PrimerSet:      prim.fasta
+Sensitivity:    1
+Specificity:    0.479
+TruePositives:  AP018488.1 BA000007.3 CP001164.1...
+FalsePositives: AE005174.2 AP026080.1 AP026082.1...
+\end{verbatim}
+We save the output of \ty{scop} to a file.
+#+end_export
+#+begin_src sh <<tut.sh>>=
+  scop -d ../data/sample -t tarTax.txt prim.fasta > scop.out
+#+end_src
+#+begin_export latex
+We check the false positives returned by calculating their distances
+to the type strain of O157:H7, EDL933, accession CP008957. This
+distance between CP008957 and any false positive---or false negative,
+if there were any---is compared to a threshold, which we need to
+pick. Here we use twice the branch length from AE005174 to the parent
+of the target clade, This is calculated with another program from the
+\ty{neighbors} package, \ty{climt}. Again, users are free to pick any
+distance they see fit. If the distance to a false positive is less
+than the threshold, it is reclassified as a true positive. Similarly,
+if the distance to a (hypothetical) false negative is greater than the
+threshold, it is reclassified as a true negative. Based on these
+distances, there are now only three false positives leading to the
+much better corrected specificity of 0.991.
+#+end_export
+#+begin_src sh <<tut.sh>>=
+  cops -d ../data/sample -r CP008957 -t 1.8e-3 scop.out
+#+end_src
+#+begin_export latex
+\begin{verbatim}
+PrimerSet:      prim.fasta
+Sensitivity:    1
+Specificity:    0.991
+TruePositives:  AE005174.2 AP018488.1 AP026080.1...
+FalsePositives: CP057173.1 CP057250.1 CP084534.1
+\end{verbatim}
+The program \ty{cops} can also return the distances to the reference,
+which are greater 1.5\% for the three false positives. In other words,
+these distances are far removed from the threshold.
+#+end_export
+#+begin_src sh <<tut.sh>>=
+  cops -d ../data/sample -r CP008957 -t 1.8e-3 -D scop.out
+#+end_src
+#+begin_export latex
+\begin{verbatim}
+PrimerSet:      prim.fasta
+Sensitivity:    1
+Specificity:    0.991
+TruePositives:  AE005174.2 AP018488.1 AP026080.1...
+FalsePositives: CP057173.1 0.0157 CP057250.1 0.0158 CP084534.1 0.0158
+\end{verbatim}
+If we are also interested in the distances among the true positives,
+we can rerun \ty{cops} with the \ty{-p} switch for also checking the
+true positives. This slows down the run, shows that the true positives
+are also safely removed from the threshold. We are not dealing with
+classifications that would change had we picked a slightly different
+threshold.
+#+end_export
+#+begin_src sh <<tut.sh>>=
+  cops -d ../data/sample -r CP008957 -t 1.8e-3 -D -p scop.out
+#+end_src
+#+begin_export latex
+\begin{verbatim}
+PrimerSet:      prim.fasta
+Sensitivity:    1
+Specificity:    0.991
+TruePositives:  AE005174.2 2.18e-05 AP018488.1 0.000654 AP026080.1 0.000307...
+FalsePositives: CP057173.1 0.0157 CP057250.1 0.0158 CP084534.1 0.0158
+\end{verbatim}
+#+end_export
