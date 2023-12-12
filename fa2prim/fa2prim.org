@@ -5,7 +5,11 @@
   example of output by \ty{fa2prim}.
   \begin{figure}
     \begin{center}
-      \verbatiminput{../fa2prim/primIn.txt}
+      \fbox{
+      \begin{minipage}{9cm}
+	\verbatiminput{../fa2prim/primIn.txt}
+      \end{minipage}
+      }
     \end{center}
     \caption{Output by \ty{fa2prim}, which then serves as input to
       \ty{primer3}.}\label{fig:primIn}
@@ -78,7 +82,9 @@ We import \ty{flag}.
 #+end_src
 #+begin_export latex
 We declare the 10 options for \ty{primer3} listed in
-Table~\ref{tab:primer3} together with their default values.
+Table~\ref{tab:primer3} together with their default values. We begin
+with the four options to specify the sizes of the primers and the
+internal oligo.
 \begin{table}
   \caption{Options for driving \ty{primer3} and their default
     values.}\label{tab:primer3}
@@ -102,16 +108,32 @@ Table~\ref{tab:primer3} together with their default values.
 \end{table}
 #+end_export
 #+begin_src go <<Options for \ty{primer3}, Pr. \ref{pr:f2p}>>=
-  primMinSize := flag.Int("primMinSize", 15, "minimum primer size")
-  primMaxSize := flag.Int("primMaxSize", 25, "maximum primer size")
-  prodMinSize := flag.Int("prodMinSize", 70, "minimum product size")
-  prodMaxSize := flag.Int("prodMaxSize", 150, "maximum product size")
-  primMinTm := flag.Float64("primMinTm", 54, "minimum primer T_m")
-  primOptTm := flag.Float64("primOptTm", 56, "optimal primer T_m")
-  primMaxTm := flag.Float64("primMaxTm", 58, "maximum primer T_m")
-  inMinTm := flag.Float64("inMinTm", 43, "minimum internal oligo T_m")
-  inOptTm := flag.Float64("inOptTm", 45, "optimal internal oligo T_m")
-  inMaxTm := flag.Float64("inMaxTm", 47, "maximum internal oligo T_m")
+  primMinSize := flag.Int("primMinSize", 15,
+	  "minimum primer size")
+  primMaxSize := flag.Int("primMaxSize", 25,
+	  "maximum primer size")
+  prodMinSize := flag.Int("prodMinSize", 70,
+	  "minimum product size")
+  prodMaxSize := flag.Int("prodMaxSize", 150,
+	  "maximum product size")
+#+end_src
+#+begin_export latex
+We continue with the six options to specify the melting temperature of
+the primer and the internal oligo.
+#+end_export
+#+begin_src go <<Options for \ty{primer3}, Pr. \ref{pr:f2p}>>=
+  primMinTm := flag.Float64("primMinTm", 54,
+	  "minimum primer T_m")
+  primOptTm := flag.Float64("primOptTm", 56,
+	  "optimal primer T_m")
+  primMaxTm := flag.Float64("primMaxTm", 58,
+	  "maximum primer T_m")
+  inMinTm := flag.Float64("inMinTm", 43,
+	  "minimum internal oligo T_m")
+  inOptTm := flag.Float64("inOptTm", 45,
+	  "optimal internal oligo T_m")
+  inMaxTm := flag.Float64("inMaxTm", 47,
+	  "maximum internal oligo T_m")
 #+end_src
 #+begin_export latex
 We parse the options and respond to a version request, as this stops
@@ -163,9 +185,9 @@ parse these files using \ty{ParseFiles}, which applies the function
   clio.ParseFiles(files, parse, pa)
 #+end_src
 #+begin_export latex
-Inside \ty{parse} we retrieve the parameter container. The we iterate
-over the sequences in the current input file. For each file we print a
-set of \ty{primer3} instructions.
+Inside \ty{parse}, we retrieve the parameter container. Then we
+iterate over the sequences in the current input file. For each file we
+print a set of \ty{primer3} instructions.
 #+end_export
 #+begin_src go <<Functions, Pr. \ref{pr:f2p}>>=
   func parse(r io.Reader, args ...interface{}) {
@@ -185,8 +207,8 @@ We import \ty{io} and \ty{fasta}.
   "github.com/evolbioinf/fasta"
 #+end_src
 #+begin_export latex
-The input to \ty{primer3} consists of a constant and a variable part
-terminated by \ty{=}.
+For a given template, the input to \ty{primer3} consists of a constant
+and a variable part and is terminated by \ty{=}.
 #+end_export
 #+begin_src go <<Print \ty{primer3} input, Pr. \ref{pr:f2p}>>=
   //<<Print constant \ty{primer3} input, Pr. \ref{pr:f2p}>>

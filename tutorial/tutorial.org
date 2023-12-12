@@ -20,7 +20,7 @@ We extract the primers into a table.
   prim2tab prim.out
 #+end_src
 #+begin_export latex
-\small
+\footnotesize
 \begin{verbatim}
 # Penalty  Forward                 Reverse               Internal
 1.320714   CGGCAATATCATAGACATCGT   AACGATTATGTGTGGGCAAA  TCACGACGATAATTATCTTT
@@ -34,9 +34,9 @@ We extract the primers into a table.
 2.213344   TGTAGTATCAGAAGAGAACGC   GTATTGGTTGTCAGGAGCTG  CTAGTCCATAAGCAAGAAAA
 2.222044   TGTAGTATCAGAAGAGAACGC   AGTATTGGTTGTCAGGAGCT  CTAGTCCATAAGCAAGAAAA
 \end{verbatim}
-\normalsize We sort by the penalty and pick the forward and reverse
-primer with the lowest penalty. (We ignore the internal oligo in this
-Tutorial.)
+\normalsize We sort the table by the penalty and pick the forward and
+reverse primer with the lowest penalty. (We ignore the internal oligo
+in this Tutorial.)
 #+end_export
 #+begin_src sh <<tut.sh>>=
   prim2tab prim.out |
@@ -63,7 +63,7 @@ We save the primer pair to a file.
 #+end_src
 #+begin_export latex
 We are done designing the primers. Of course, we could have carried
-out the above steps all in one pipeline.
+out the above steps all in one short pipeline.
 #+end_export
 #+begin_src sh <<tut.sh>>=
   fa2prim template.fasta |
@@ -76,11 +76,12 @@ out the above steps all in one pipeline.
 #+end_src
 #+begin_export latex
 \section*{Test Primers}
-We test a set of primers by running them against a large DNA sequence
-database, for example, the non-redundant collection of nucleotide
-sequences provided by the NCBI. However, for the purposes of this
-tutorial we work with a much abridged database, which we download into
-the \ty{data} folder and unpack.
+In a production setting, we would test a set of primers by running
+them against a large DNA sequence database, for example, the
+non-redundant collection of nucleotide sequences provided by the
+NCBI. However, for the purposes of this Tutorial, we work with an
+abridged database, which we download into the \ty{data} folder and
+unpack.
 #+end_export
 #+begin_src sh <<tut.sh>>=
   wget guanine.evolbio.mpg.de/prim/sample.tgz
@@ -90,16 +91,17 @@ the \ty{data} folder and unpack.
   cd ../tutorial
 #+end_src
 #+begin_export latex
-We calculate the sensitivity and specificity of our primers based on
-the accuracy with which they amplify the target taxa listed by their
-taxon IDs in the file \ty{tarTax.txt}. These taxa all belong to
-\emph{E. coli} O157:H7 and were obtained using
+We score our primers using the program \ty{scop}. It calculates the
+sensitivity and specificity of our primers based on the accuracy with
+which they amplify the target taxa listed by their taxon IDs in the
+file \ty{tarTax.txt}. These taxa all belong to \emph{E. coli} O157:H7
+and were obtained using
 \ty{neighbors}\footnote{github.com/evolbioinf/neighbors}. However,
 they could also be obtained using the webbrowser of the NCBI
 taxonomy\footnote{https://www.ncbi.nlm.nih.gov/taxonomy}. We find no
 false negatives, so our sensitivity is maximal. However, there appear
 to be more false positives than true positives, hence our specificity
-is a rather low 0.479.
+is a rather low, 0.479.
 #+end_export
 #+begin_src sh <<tut.sh>>=
   scop -d ../data/sample -t tarTax.txt prim.fasta
@@ -119,18 +121,18 @@ We save the output of \ty{scop} to a file.
 #+end_src
 #+begin_export latex
 We check the false positives returned by calculating their distances
-to the type strain of O157:H7, EDL933, accession CP008957. This
-distance between CP008957 and any false positive---or false negative,
-if there were any---is compared to a threshold, which we need to
-pick. Here we use twice the branch length from AE005174 to the parent
-of the target clade, This is calculated with another program from the
-\ty{neighbors} package, \ty{climt}. Again, users are free to pick any
-distance they see fit. If the distance to a false positive is less
-than the threshold, it is reclassified as a true positive. Similarly,
-if the distance to a (hypothetical) false negative is greater than the
-threshold, it is reclassified as a true negative. Based on these
-distances, there are now only three false positives leading to the
-much better corrected specificity of 0.991.
+to the type strain of O157:H7, EDL933, which has accession
+CP008957. This distance between CP008957 and any false positive---or
+false negative, if there were any---is compared to a threshold, which
+we need to pick. Here we use twice the branch length from AE005174 to
+the parent of the target clade, $0.0018$. This is calculated with another
+program from the \ty{neighbors} package, \ty{climt}. Again, users are
+free to pick any distance they see fit. If the distance to a false
+positive is less than the threshold, it is reclassified as a true
+positive. Similarly, if the distance to a (hypothetical) false
+negative is greater than the threshold, it is reclassified as a true
+negative. Based on these distances, there are now only three false
+positives leading to the much better corrected specificity of 0.991.
 #+end_export
 #+begin_src sh <<tut.sh>>=
   cops -d ../data/sample -r CP008957 -t 1.8e-3 scop.out
@@ -160,10 +162,10 @@ FalsePositives: CP057173.1 0.0157 CP057250.1 0.0158 CP084534.1 0.0158
 \end{verbatim}
 If we are also interested in the distances among the true positives,
 we can rerun \ty{cops} with the \ty{-p} switch for also checking the
-true positives. This slows down the run, shows that the true positives
-are also safely removed from the threshold. We are not dealing with
-classifications that would change had we picked a slightly different
-threshold.
+true positives. This slows down the run, but shows that the true
+positives are also safely removed from the threshold. So we are not
+dealing with classifications that would change had we picked a
+slightly different threshold.
 #+end_export
 #+begin_src sh <<tut.sh>>=
   cops -d ../data/sample -r CP008957 -t 1.8e-3 -D -p scop.out
