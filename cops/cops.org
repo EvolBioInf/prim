@@ -490,9 +490,7 @@ We import \ty{strconv} and \ty{filepath}.
   "path/filepath"
 #+end_src
 #+begin_export latex
-We read the distance matrix or, failing that, give up. If we do read a
-distance matrix, it might contain ``nans'', or ``not a number''s,
-which we deal with separately.
+We read the distance matrix or, failing that, give up.
 #+end_export
 #+begin_src go <<Read distance matrix, Pr. \ref{pr:cop}>>=
   var mat *dist.DistMat
@@ -500,7 +498,6 @@ which we deal with separately.
   scanner := dist.NewScanner(r)
   if scanner.Scan() {
 	  mat = scanner.DistanceMatrix()
-	  //<<Deal with nans, Pr. \ref{pr:cop}>>
   } else {
 	  log.Fatal("couldn't read distance matrix")
   }
@@ -510,26 +507,6 @@ We import \ty{dist}.
 #+end_export
 #+begin_src go <<Imports, Pr. \ref{pr:cop}>>=
   "github.com/evolbioinf/dist"
-#+end_src
-#+begin_export latex
-If the distance matrix contains an entry that isn't a number, we
-assume the true distance is large. To mark this, we set it to double
-the threshold.
-#+end_export
-#+begin_src go <<Deal with nans, Pr. \ref{pr:cop}>>=
-  for i := 0; i < len(mat.Matrix); i++ {
-	  for j := 0; j < len(mat.Matrix[i]); j++ {
-		  if math.IsNaN(mat.Matrix[i][j]) {
-			  mat.Matrix[i][j] = dt * 2.0
-		  }
-	  }
-  }
-#+end_src
-#+begin_export latex
-We import \ty{math}.
-#+end_export
-#+begin_src go <<Imports, Pr. \ref{pr:cop}>>=
-  "math"
 #+end_src
 #+begin_export latex
 In order to correct the given classification, we first need a map
@@ -556,17 +533,25 @@ analysis might uncover new true positives, which we store.
 We look up the distance between the reference and the current
 accession, $d_i$. Comparison of $d_i$ to the threshold distance,
 $d_{\rm t}$, allows us to determine whether we are dealing with a
-``true'' false positive, or a new true positive.
+``true'' false positive, or a new true positive. Note that we classify
+a distance that is ``not a number'' as a distance that is always
+greater than the threshold.
 #+end_export
 #+begin_src go <<Analyze false positive, Pr. \ref{pr:cop}>>=
   j := accMap[acc]
   di := mat.Matrix[ri][j]
-  if di > dt {
+  if di > dt || math.IsNaN(di) {
 	  accs[n] = acc
 	  n++
   } else {
 	  ntp = append(ntp, acc)
   }
+#+end_src
+#+begin_export latex
+We import \ty{math}.
+#+end_export
+#+begin_src go <<Imports, Pr. \ref{pr:cop}>>=
+  "math"
 #+end_src
 #+begin_export latex
 Having correcte the false positives, we now analyze the false
