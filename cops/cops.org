@@ -490,7 +490,9 @@ We import \ty{strconv} and \ty{filepath}.
   "path/filepath"
 #+end_src
 #+begin_export latex
-We read the distance matrix or, failing that, give up.
+We read the distance matrix or, failing that, give up. If we do read a
+distance matrix, it might contain ``nans'', or ``not a number''s,
+which we deal with separately.
 #+end_export
 #+begin_src go <<Read distance matrix, Pr. \ref{pr:cop}>>=
   var mat *dist.DistMat
@@ -498,6 +500,7 @@ We read the distance matrix or, failing that, give up.
   scanner := dist.NewScanner(r)
   if scanner.Scan() {
 	  mat = scanner.DistanceMatrix()
+	  //<<Deal with nans, Pr. \ref{pr:cop}>>
   } else {
 	  log.Fatal("couldn't read distance matrix")
   }
@@ -507,6 +510,26 @@ We import \ty{dist}.
 #+end_export
 #+begin_src go <<Imports, Pr. \ref{pr:cop}>>=
   "github.com/evolbioinf/dist"
+#+end_src
+#+begin_export latex
+If the distance matrix contains an entry that isn't a number, we
+assume the true distance is large. To mark this, we set it to double
+the threshold.
+#+end_export
+#+begin_src go <<Deal with nans, Pr. \ref{pr:cop}>>=
+  for i := 0; i < len(mat.Matrix); i++ {
+	  for j := 0; j < len(mat.Matrix[i]); j++ {
+		  if math.IsNaN(mat.Matrix[i][j]) {
+			  mat.Matrix[i][j] = dt * 2.0
+		  }
+	  }
+  }
+#+end_src
+#+begin_export latex
+We import \ty{math}.
+#+end_export
+#+begin_src go <<Imports, Pr. \ref{pr:cop}>>=
+  "math"
 #+end_src
 #+begin_export latex
 In order to correct the given classification, we first need a map
