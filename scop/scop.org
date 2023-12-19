@@ -224,13 +224,15 @@ We import \ty{fmt}, \ty{strings}, and \ty{exec}.
 #+begin_export latex
 We split the query output at the line breaks into entries of the Blast
 database. We iterate over these entries and save the accessions of
-``complete genomes''.
+``complete genomes'' that are not ``plasmids''.
 #+end_export
 #+begin_src go <<Analyze query result, Pr. \ref{pr:sco}>>=
   cg := []byte("complete genome")
+  pl := []byte("plasmid")
   entries := bytes.Split(out, []byte("\n"))
   for _, entry := range entries {
-	  if bytes.Contains(entry, cg) {
+	  if bytes.Contains(entry, cg)  &&
+		  !bytes.Contains(entry, pl) {
 		  acc := string(bytes.Fields(entry)[0])
 		  etacc[acc] = true
 	  }
