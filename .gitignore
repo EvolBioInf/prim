@@ -1,6 +1,5 @@
 */*.go
 bin
-data/sample*
 doc/*.aux
 doc/*.bbl
 doc/*.blg
@@ -25,6 +24,7 @@ fa2prim/fa2prim
 fa2prim/makeRes.sh
 prim2tab/prim2tab
 scop/scop
+scop/sample.*
 tutorial/tut.sh
 tutorial/cops.out
 tutorial/prim.fasta

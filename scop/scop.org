@@ -24,24 +24,19 @@ In addition, \ty{scop} prints the true positives, false positives, and
 the false negatives, if any, for further checking with the program
 \ty{cops}, which corrects the primer scores obtained by \ty{scop}.
 
-To construct an example run, change into the \ty{data} directory of
-the repo, download a sample database, unpack it, and return to the
-parent directory.
+To construct an example run, we download a sample database and unpack
+it.
 \begin{verbatim}
-$ cd data
 $ wget guanine.evolbio.mpg.de/prim/sample.tgz
 $ tar -xvzf sample.tgz
-$ cd ../
 \end{verbatim}
-Then change into the \ty{scop} directory and analyze the sample
-primers in the file \ty{prim.fasta}, which should amplify all database
-entries of the taxa listed by taxon IDs in \ty{tarTax.txt}. These
-target taxon IDs might have been generated, for example, using the
-program \ty{neighbors} from the Neighbors
+Then we analyze the sample primers in the file \ty{prim.fasta}, which
+should amplify all database entries of the taxa listed by taxon IDs in
+\ty{tarTax.txt}. These target taxon IDs might have been generated, for
+example, using the program \ty{neighbors} from the Neighbors
 package\footnote{\ty{github.com/evolbioinf/neighbors}}.
 \begin{verbatim}
-$ cd scop
-$ ./scop -d ../data/sample -t tarTax.txt prim.fasta
+$ ./scop -d sample -t tarTax.txt prim.fasta
 \end{verbatim}
 In this setup, the sensitivity of the tested primers is maximal, so
 there are no false negatives, but there appear to be a large number of
@@ -71,8 +66,7 @@ functions, and the logic of the main function.  \bpr{scop}{pr:sco}
 #+end_src
 #+begin_export latex
 \epr In the main function we first set the name of \ty{scop}. Then we
-set the usage, declare the options, parse the options, and parse the
-input.
+set its usage, declare the options, parse them, and parse the input.
 #+end_export
 #+begin_src go <<Main function, Pr. \ref{pr:sco}>>=
   util.SetName("scop")
@@ -114,8 +108,20 @@ program to run, so we shall make them mandatory,
 \item \ty{-e}: E-value
 \item \ty{-T}: number of threads, which we initailize to the number of
   CPUs
+\item \ty{-m}: let $e$ be the expected number of target accessions,
+  then the maximum number of target sequences reported by Blast is set to
+  $e\times \ty{-m}$.
 \item \ty{-v}: version
 \end{enumerate}
+The \ty{-m} option requires some explaining. It is important that we
+get all Blast hits, not just the subset limited by the Blast parameter
+\ty{-max\_target\_seqs}, 500 by default. We might be tempted to set
+this parameter to the number of expected accessions, but that would
+preclude finding any hits beyond this set. So we give ourselves a
+three-fold safety margin, but also allow the user to increase or
+decrease this value. If you are surprised by low sensitivity, try
+increasing \ty{-m} and you might observe a reduction in false
+negatives, and hence an increase in the sensitivity.
 #+end_export
 #+begin_src go <<Declare options, Pr. \ref{pr:sco}>>=
   optD := flag.String("d", "", "Blast database")
@@ -125,6 +131,9 @@ program to run, so we shall make them mandatory,
   optE := flag.Float64("e", 10.0, "E-value")
   nt := runtime.NumCPU()
   optTT := flag.Int("T", nt, "number of threads (default CPUs)")
+  optM := flag.Float64("m", 3.0, "set the maximum number " +
+	  "of target sequences in Blast to the expected " +
+	  "number of accessions times -m")
   optV := flag.Bool("v", false, "version")
 #+end_src
 #+begin_export latex
@@ -134,11 +143,11 @@ We import \ty{flag}.
   "flag"
 #+end_src
 #+begin_export latex
-We parse the options and first respond to \ty{-v}, as a request for the
-version stops \ty{scop}. Then we check whether the mandatory options
-of Blast database (\ty{-d}) and target taxon IDs (\ty{-t}) have been
-set. If so, we look up the expected target accessions and respond to the
-number of threads, (\ty{-T}).
+We parse the options and first respond to \ty{-v}, as a request for
+the version stops \ty{scop}. Then we check whether the mandatory
+options---Blast database (\ty{-d}) and target taxon IDs
+(\ty{-t})---have been set. If so, we look up the expected target
+accessions and respond to the number of threads, (\ty{-T}).
 #+end_export
 #+begin_src go <<Parse options, Pr. \ref{pr:sco}>>=
   flag.Parse()
@@ -201,7 +210,8 @@ the title line. We construct this command and run it. Notice that we
 construct the argument array by splitting the command string into its
 constituent fields. However, since the output format takes as value a
 composite string, we append that to the argument slice
-separately. Then we run the command and check its error.
+separately. Then we run the command and check the error variable it
+returns
 #+end_export
 #+begin_src go <<Query Blast database, Pr. \ref{pr:sco}>>=
   tmpl := "blastdbcmd -db %s -taxidlist %s -outfmt "
@@ -325,8 +335,8 @@ whether they might form an amplicon by investigating their subject
 accession and position. So as our output we request a table consisting
 of alignment length, query length, the number of mismatches, the
 subject accession, the subject start, and the subject end
-(Table~\ref{tab:bout}). We run this command, store its output, and
-check the error it returns.
+(Table~\ref{tab:bout}). Once constructed, we run the Blast command,
+store its output, and check the error it returns.
 \begin{table}
   \caption{The six columns of output in our run of \ty{blastn} for
     finding amplicons.}\label{tab:bout}
@@ -345,9 +355,11 @@ check the error it returns.
 \end{table}
 #+end_export
 #+begin_src go <<Run Blast, Pr. \ref{pr:sco}>>=
-  tmpl = "blastn -task blastn-short -query %s -db %s " +
-	  "-evalue %g -num_threads %d -outfmt "
-  cs = fmt.Sprintf(tmpl, primerSet, *optD, *optE, *optTT)
+  tmpl = "blastn -task blastn-short -query %s -db %s -evalue " +
+	  "%g -num_threads %d -max_target_seqs %d -outfmt "
+  mts := int(*optM * float64(len(etacc))) + 1
+  //fmt.Printf("mts: %d\n", mts)
+  cs = fmt.Sprintf(tmpl, primerSet, *optD, *optE, *optTT, mts)
   args = strings.Fields(cs)
   args = append(args, "6 length qlen mismatch " +
 	  "saccver sstart send")
@@ -550,8 +562,8 @@ expected. We count and save them.
   }
 #+end_src
 #+begin_export latex
-The false positives are the observed accessions that are not expected
-are the false positives. We also save these accessions.
+The false positives are the observed accessions that are not
+expected. We also save these accessions.
 #+end_export
 #+begin_src go <<Calculate $f_{\rm p}$, Pr. \ref{pr:sco}>>=
   fp := 0
@@ -565,7 +577,7 @@ are the false positives. We also save these accessions.
 #+end_src
 #+begin_export latex
 The false negatives are the expected accessions that weren't
-observed. We also save these accessions.
+observed; we save them, too.
 #+end_export
 #+begin_src go <<Calculate $f_{\rm n}$, Pr. \ref{pr:sco}>>=
   fn := 0
@@ -593,7 +605,7 @@ equation~(\ref{eq:sp}).
 #+end_src
 #+begin_export latex
 We report the name of our primer sample, its sensitivity, and its
-specificity. In addition, we list the true positive, false positives
+specificity. In addition, we list the true positives, false positives,
 and false negatives.
 #+end_export
 #+begin_src go <<Report sensitivity and specificity, Pr. \ref{pr:sco}>>=
@@ -618,9 +630,6 @@ them as a blank-delimited row.
 	  fmt.Printf("\n")
   }
 #+end_src
-#+begin_export latex
-We import \ty{sort}.
-#+end_export
 #+begin_export latex
 We also print the sorted false positives as a blank-delimited row.
 #+end_export
@@ -673,14 +682,10 @@ We construct one test and run it.
 #+end_src
 #+begin_export latex
 We use \ty{scop} to score the primers in \ty{prim.fasta} using the
-sample database
-\begin{verbatim}
-../data/sample
-\end{verbatim}
-and the target taxa in \ty{tarTax.txt}.
+sample database, \ty{sample}, and the target taxa in \ty{tarTax.txt}.
 #+end_export
 #+begin_src go <<Construct test, Pr. \ref{pr:sco}>>=
-  test := exec.Command("./scop", "-d", "../data/sample",
+  test := exec.Command("./scop", "-d", "sample",
 	  "-t", "tarTax.txt", "prim.fasta")
 #+end_src
 #+begin_export latex
