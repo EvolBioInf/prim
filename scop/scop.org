@@ -98,7 +98,7 @@ We import \ty{clio}.
   "github.com/evolbioinf/clio"
 #+end_src
 #+begin_export latex
-We declare nine options, the first two of which are necessary for the
+We declare ten options, the first two of which are necessary for the
 program to run, so we shall make them mandatory,
 \begin{enumerate}
 \item \ty{-d}: Blast database
