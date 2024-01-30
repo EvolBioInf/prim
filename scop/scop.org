@@ -98,11 +98,15 @@ We import \ty{clio}.
   "github.com/evolbioinf/clio"
 #+end_src
 #+begin_export latex
-We declare seven options, the first two of which are necessary for the
+We declare nine options, the first two of which are necessary for the
 program to run, so we shall make them mandatory,
 \begin{enumerate}
 \item \ty{-d}: Blast database
 \item \ty{-t}: file of target taxon IDs
+\item \ty{-n}: file of negative taxon IDs (\ty{-negative\_taxidlist} 
+  for \ty{blastn})
+\item \ty{-p}: file of positive taxon IDs (\ty{-taxidlist} for
+  \ty{blastn})
 \item \ty{-i}: maximum number of mismatches
 \item \ty{-l}: maximum length of amplicon
 \item \ty{-e}: E-value
@@ -126,6 +130,10 @@ negatives, and hence an increase in the sensitivity.
 #+begin_src go <<Declare options, Pr. \ref{pr:sco}>>=
   optD := flag.String("d", "", "Blast database")
   optT := flag.String("t", "", "file of target taxon IDs")
+  optN := flag.String("n", "", "file of negative taxon IDs " +
+	  "(-negative_taxidlist for blastn)")
+  optP := flag.String("p", "", "file of positive taxon IDs " +
+	  "(-taxidlist for blastn)")
   optI := flag.Int("i", 5, "maximum number of mismatches")
   optL := flag.Int("l", 4000, "maximum length of amplicon")
   optE := flag.Float64("e", 10.0, "E-value")
@@ -258,7 +266,7 @@ We import \ty{bytes}.
 If the user didn't set the number of threads, we set it to the number
 of CPUs.
 #+end_export
-#+begin_src go <<Respond to \ty{-T}, Pr, \ref{pr:sco}>>=
+#+begin_src go <<Respond to \ty{-T}, Pr. \ref{pr:sco}>>=
   if *optTT == 0 {
 	  (*optTT) = runtime.NumCPU()
   }
@@ -316,6 +324,7 @@ sensitivity and specificity of our primer set according to
 equations~(\ref{eq:sn}) and (\ref{eq:sp}), which we report.
 #+end_export
 #+begin_src go <<Analyze primer set, Pr. \ref{pr:sco}>>=
+  //<<Construct Blast command, Pr. \ref{pr:sco}>>
   //<<Run Blast, Pr. \ref{pr:sco}>>
   //<<Get observed target accessions, Pr. \ref{pr:sco}>>
   //<<Compare observed and expected target accessions, Pr. \ref{pr:sco}>>
@@ -354,15 +363,45 @@ store its output, and check the error it returns.
   \end{center}
 \end{table}
 #+end_export
-#+begin_src go <<Run Blast, Pr. \ref{pr:sco}>>=
+#+begin_src go <<Construct Blast command, Pr. \ref{pr:sco}>>=
   tmpl = "blastn -task blastn-short -query %s -db %s -evalue " +
-	  "%g -num_threads %d -max_target_seqs %d -outfmt "
+	  "%g -num_threads %d -max_target_seqs %d"
   mts := int(*optM * float64(len(etacc))) + 1
   //fmt.Printf("mts: %d\n", mts)
   cs = fmt.Sprintf(tmpl, primerSet, *optD, *optE, *optTT, mts)
+  //<<Respond to \ty{-p} and \ty{-n}, Pr. \ref{pr:sco}>>
   args = strings.Fields(cs)
-  args = append(args, "6 length qlen mismatch " +
+  args = append(args, "-outfmt", "6 length qlen mismatch " +
 	  "saccver sstart send")
+#+end_src
+#+begin_export latex
+We check whether the user asked to use both positive and negative
+taxon ID lists for \ty{blastn} driven by \ty{scop}. If both options
+are declared, we bail with a friendly message. Should a list of taxon
+IDs be properly provided, we append the respective argument to our
+Blast command before the \ty{-outfmt} argument.
+#+end_export
+#+begin_src go <<Respond to \ty{-p} and \ty{-n}, Pr. \ref{pr:sco}>>=
+  if (*optN != "" && *optP != ""){
+	  log.Fatal("please use either a positive or " +
+	  "negative taxon ID list")
+  }
+
+  if *optN != "" {
+	  tmpl = "-negative_taxidlist %s"
+	  cs = cs + " " + fmt.Sprintf(tmpl, *optN)
+  }
+
+  if *optP != "" {
+	  tmpl =  "-taxidlist %s"
+	  cs = cs + " " + fmt.Sprintf(tmpl, *optP)
+  }
+#+end_src
+#+begin_export latex
+Once constructed, we run the Blast command, store its output, and
+check the error it returns.
+#+end_export
+#+begin_src go <<Run Blast, Pr. \ref{pr:sco}>>=
   cmd = exec.Command("blastn")
   cmd.Args = args
   out, err = cmd.CombinedOutput()
