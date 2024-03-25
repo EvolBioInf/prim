@@ -154,16 +154,17 @@ We import \ty{flag}.
 We parse the options and first respond to \ty{-v}, as a request for
 the version stops \ty{scop}. Then we check whether the mandatory
 options---Blast database (\ty{-d}) and target taxon IDs
-(\ty{-t})---have been set. If so, we look up the expected target
-accessions and respond to the number of threads, (\ty{-T}).
+(\ty{-t})---have been set. If so, we look up the expected and the
+possible target accessions, and respond to the number of threads,
+(\ty{-T}).
 #+end_export
 #+begin_src go <<Parse options, Pr. \ref{pr:sco}>>=
   flag.Parse()
   //<<Respond to \ty{-v}, Pr. \ref{pr:sco}>>
   //<<Has \ty{-d} been set? Pr. \ref{pr:sco}>>
   //<<Has \ty{-t} been set? Pr. \ref{pr:sco}>>
-  //<<Look up expected target accessions, Pr. \ref{pr:sco}>>
-  //<<Respond to \ty{-T}, Pr, \ref{pr:sco}>>
+  //<<Look up expected and possible target accessions, Pr. \ref{pr:sco}>>
+  //<<Respond to \ty{-T}, Pr. \ref{pr:sco}>>
 #+end_src
 #+begin_export latex
 If the user requested the version, we print it.
@@ -198,11 +199,13 @@ bail with a friendly message.
   }
 #+end_src
 #+begin_export latex
-We store the expected target accessions in a string map and obtain
-them by querying the Blast database and analyzing the query results.
+We store the expected and the possible target accessions in string
+maps and obtain them by querying the Blast database and analyzing the
+query results.
 #+end_export
-#+begin_src go <<Look up expected target accessions, Pr. \ref{pr:sco}>>=
+#+begin_src go <<Look up expected and possible target accessions, Pr. \ref{pr:sco}>>=
   etacc := make(map[string]bool)
+  ptacc := make(map[string]bool)
   //<<Query Blast database, Pr. \ref{pr:sco}>>
   //<<Analyze query result, Pr. \ref{pr:sco}>>
 #+end_src
@@ -241,19 +244,16 @@ We import \ty{fmt}, \ty{strings}, and \ty{exec}.
 #+end_src
 #+begin_export latex
 We split the query output at the line breaks into entries of the Blast
-database. We iterate over these entries and save the accessions of
-``complete genomes'' that are not ``plasmids''.
+database. We iterate over these entries and save the possible and the
+expected targets.
 #+end_export
 #+begin_src go <<Analyze query result, Pr. \ref{pr:sco}>>=
   cg := []byte("complete genome")
   pl := []byte("plasmid")
   entries := bytes.Split(out, []byte("\n"))
   for _, entry := range entries {
-	  if bytes.Contains(entry, cg)  &&
-		  !bytes.Contains(entry, pl) {
-		  acc := string(bytes.Fields(entry)[0])
-		  etacc[acc] = true
-	  }
+	  //<<Get possible targets, Pr. \ref{pr:sco}>>
+	  //<<Get expected targets, Pr. \ref{pr:sco}>>
   }
 #+end_src
 #+begin_export latex
@@ -261,6 +261,26 @@ We import \ty{bytes}.
 #+end_export
 #+begin_src go <<Imports, Pr. \ref{pr:sco}>>=
   "bytes"
+#+end_src
+#+begin_export latex
+All accessions are saved in the list of possible targets.
+#+end_export
+#+begin_src go <<Get possible targets, Pr. \ref{pr:sco}>>=
+  acc := ""
+  if len(entry) > 0 {
+	  acc = string(bytes.Fields(entry)[0])
+	  ptacc[acc] = true
+  }
+#+end_src
+#+begin_export latex
+The accessions of ``complete genomes'' that are not ``plasmids'' are
+the expected targets.
+#+end_export
+#+begin_src go <<Get expected targets, Pr. \ref{pr:sco}>>=
+  if bytes.Contains(entry, cg)  &&
+	  !bytes.Contains(entry, pl) {
+	  etacc[acc] = true
+  }
 #+end_src
 #+begin_export latex
 If the user didn't set the number of threads, we set it to the number
@@ -602,13 +622,13 @@ expected. We count and save them.
 #+end_src
 #+begin_export latex
 The false positives are the observed accessions that are not
-expected. We also save these accessions.
+possible. We also save these accessions.
 #+end_export
 #+begin_src go <<Calculate $f_{\rm p}$, Pr. \ref{pr:sco}>>=
   fp := 0
   falsePositives := make([]string, 0)
   for o, _ := range otacc {
-	  if !etacc[o] {
+	  if !ptacc[o] {
 		  fp++
 		  falsePositives = append(falsePositives, o)
 	  }
