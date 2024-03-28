@@ -608,13 +608,13 @@ and compare them to calculate the number of true positives, $t_{\rm
 #+end_src
 #+begin_export latex
 The true positives are the observed accessions that are also
-expected. We count and save them.
+possible. We count and save them.
 #+end_export
 #+begin_src go <<Calculate $t_{\rm p}$, Pr. \ref{pr:sco}>>=
   tp := 0
   truePositives := make([]string, 0)
   for o, _ := range otacc {
-	  if etacc[o] {
+	  if ptacc[o] {
 		  truePositives = append(truePositives, o)
 		  tp++
 	  }

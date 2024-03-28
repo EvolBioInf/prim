@@ -1,5 +1,6 @@
 */*.go
 bin
+data
 doc/*.aux
 doc/*.bbl
 doc/*.blg
