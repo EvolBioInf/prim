@@ -175,27 +175,41 @@ If the user requested the version, we print it.
   }
 #+end_src
 #+begin_export latex
-If the user didn't supply a Blast database, we bail with a friendly
-message.
+If the user didn't supply a Blast database or the database doesn't
+exist, we bail with a friendly message.
 #+end_export
 #+begin_src go <<Has \ty{-d} been set? Pr. \ref{pr:sco}>>=
   if *optD == "" {
 	  log.Fatal("please supply a Blast datbase")
+  } else {
+	  fn := *optD + ".ndb"
+	  _, err := os.Stat(fn)
+	  if err != nil {
+		  m := "couldn't find Blast database %q\n"
+		  log.Fatalf(m, *optD)
+	  }
   }
 #+end_src
 #+begin_export latex
-We import \ty{log}.
+We import \ty{log} and \ty{os}.
 #+end_export
 #+begin_src go <<Imports, Pr. \ref{pr:sco}>>=
   "log"
+  "os"
 #+end_src
 #+begin_export latex
-Similarly, if the user didn't supply a file with target taxon IDs, we
-bail with a friendly message.
+Similarly, if the user didn't supply a file with target taxon IDs or
+the file doesn't exist, we bail with a friendly message.
 #+end_export
 #+begin_src go <<Has \ty{-t} been set? Pr. \ref{pr:sco}>>=
   if *optT == "" {
 	  log.Fatal("please supply a file of target taxon IDs")
+  } else {
+	  _, err := os.Stat(*optT)
+	  if err != nil {
+		  m := "couldn't find file %q\n"
+		  log.Fatalf(m, *optT)
+	  }
   }
 #+end_src
 #+begin_export latex
@@ -231,7 +245,7 @@ returns
   args = append(args, "%a %t")
   cmd := exec.Command("blastdbcmd")
   cmd.Args = args
-  out, err := cmd.Output()
+  out, err := cmd.CombinedOutput()
   util.Check(err)
 #+end_src
 #+begin_export latex
@@ -329,7 +343,7 @@ standard input stream to it, and store its name.
   primerSets = append(primerSets, ps.Name())
 #+end_src
 #+begin_export latex
-We import \ty{os} and \ty{fasta}.
+We import \ty{fasta}.
 #+end_export
 #+begin_src go <<Imports, Pr. \ref{pr:sco}>>=
   "os"
@@ -359,13 +373,18 @@ the \ty{blastdbcmd} command. However, this time the command is called
 
 We are looking for hits where the alignment length is equal to the
 primer length, that is, the query length, with no more than a maximum
-number of mismatches. Any pairs of such hits are checked to see
-whether they might form an amplicon by investigating their subject
-accession and position. So as our output we request a table consisting
-of alignment length, query length, the number of mismatches, the
-subject accession, the subject start, and the subject end
-(Table~\ref{tab:bout}). Once constructed, we run the Blast command,
-store its output, and check the error it returns.
+number of mismatches. To make the run as efficient as possible, we set
+the maximum number of target sequences to the number of possible
+target accessions. In other words, for each possible target accession
+we request at most one subject sequence with hits.
+
+Any pairs of such hits are checked to see whether they might form an
+amplicon by investigating their subject accession and position. So as
+our output we request a table consisting of alignment length, query
+length, the number of mismatches, the subject accession, the subject
+start, and the subject end (Table~\ref{tab:bout}). Once constructed,
+we run the Blast command, store its output, and check the error it
+returns.
 \begin{table}
   \caption{The six columns of output in our run of \ty{blastn} for
     finding amplicons.}\label{tab:bout}
@@ -386,8 +405,7 @@ store its output, and check the error it returns.
 #+begin_src go <<Construct Blast command, Pr. \ref{pr:sco}>>=
   tmpl = "blastn -task blastn-short -query %s -db %s -evalue " +
 	  "%g -num_threads %d -max_target_seqs %d"
-  mts := int(*optM * float64(len(etacc))) + 1
-  //fmt.Printf("mts: %d\n", mts)
+  mts := int(*optM * float64(len(ptacc)))
   cs = fmt.Sprintf(tmpl, primerSet, *optD, *optE, *optTT, mts)
   //<<Respond to \ty{-p} and \ty{-n}, Pr. \ref{pr:sco}>>
   args = strings.Fields(cs)
@@ -459,18 +477,18 @@ Table~\ref{tab:bout}.
   }
 #+end_src
 #+begin_export latex
-We iterate over the primer sets of the Blast output and from every
-line that consists of six fields, we extract the hit.
+We iterate over of lines of the Blast output and from every line that
+consists of six fields, we extract the hit.
 #+end_export
 #+begin_src go <<Store Blast hits, Pr. \ref{pr:sco}>>=
   lines := bytes.Split(out, []byte("\n"))
   for _, line := range lines {
 	  fields := bytes.Fields(line)
-	  hit := new(Hit)
 	  if len(fields) == 6 {
+		  hit := new(Hit)
 		  //<<Extract hit, Pr. \ref{pr:sco}>>
+		  hits = append(hits, hit)
 	  }
-	  hits = append(hits, hit)
   }
 #+end_src
 #+begin_export latex
