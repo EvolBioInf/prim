@@ -120,12 +120,13 @@ program to run, so we shall make them mandatory,
 The \ty{-m} option requires some explaining. It is important that we
 get all Blast hits, not just the subset limited by the Blast parameter
 \ty{-max\_target\_seqs}, 500 by default. We might be tempted to set
-this parameter to the number of expected accessions, but that would
-preclude finding any hits beyond this set. So we give ourselves a
-three-fold safety margin, but also allow the user to increase or
-decrease this value. If you are surprised by low sensitivity, try
-increasing \ty{-m} and you might observe a reduction in false
-negatives, and hence an increase in the sensitivity.
+this parameter to the number of accessions expected from the target
+taxa. However, that would preclude finding any hits beyond this
+set. So we give ourselves a three-fold safety margin, but also allow
+the user to increase or decrease this value by multiplication with
+\ty{-m}. If you are surprised by low sensitivity, try increasing
+\ty{-m} and you might observe a reduction in false negatives, and
+hence an increase in the sensitivity.
 #+end_export
 #+begin_src go <<Declare options, Pr. \ref{pr:sco}>>=
   optD := flag.String("d", "", "Blast database")
@@ -136,7 +137,7 @@ negatives, and hence an increase in the sensitivity.
 	  "(-taxidlist for blastn)")
   optI := flag.Int("i", 5, "maximum number of mismatches")
   optL := flag.Int("l", 4000, "maximum length of amplicon")
-  optE := flag.Float64("e", 10.0, "E-value")
+  optE := flag.Float64("e", 1000.0, "E-value")
   nt := runtime.NumCPU()
   optTT := flag.Int("T", nt, "number of threads (default CPUs)")
   optM := flag.Float64("m", 3.0, "set the maximum number " +
