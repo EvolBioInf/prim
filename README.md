@@ -1,6 +1,6 @@
 # `prim`
 ## Description
-Programs for designing and testing
+[Programs](https://owncloud.gwdg.de/index.php/s/HoGv0q8FXumX6Vl) for designing and testing
 primers.
 ## Author
 [Bernhard Haubold](http://guanine.evolbio.mpg.de/), `haubold@evolbio.mpg.de`
