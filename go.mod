@@ -1,6 +1,6 @@
 module github.com/evolbioinf/prim
 
-go 1.21.4
+go 1.21
 
 require (
 	github.com/evolbioinf/clio v0.0.0-20230620105705-02d07225d27e
