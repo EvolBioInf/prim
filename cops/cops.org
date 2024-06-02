@@ -280,12 +280,11 @@ threads, the distance switch, and the true positives switch.
 #+begin_export latex
 We split the report into its constituent lines and check whether a
 terminal carriage return created an empty line, which we cut. Then we
-check we have at least three lines and no more than six. Note at this
-point that the terminal If not, we bail with a friendly message. If
-we're still going, we store the name of the primer set. Then we skip
-the lines containing the sensitivity and specificity and store the
-accessions of true positives, false positives, and false negatives in
-a map.
+check we have at least three lines and no more than six. If not, we
+bail with a friendly message. If we're still going, we store the name
+of the primer set. Then we skip the lines containing the sensitivity
+and specificity and store the accessions of true positives, false
+positives, and false negatives in a map.
 #+end_export
 #+begin_src go <<Analyze report, Pr. \ref{pr:cop}>>=
   lines := bytes.Split(report, []byte("\n"))
@@ -430,7 +429,8 @@ We run \ty{blastdbccmd} in batch mode to retrieve the sequences
 corresponding to the accessions we just wrote to file.
 #+end_export
 #+begin_src go <<Run \ty{blastdbcmd}, Pr. \ref{pr:cop}>>=
-  cmd = exec.Command("blastdbcmd", "-db", db, "-entry_batch", f.Name())
+  cmd = exec.Command("blastdbcmd", "-db", db,
+	  "-entry_batch", f.Name())
   out, err = cmd.CombinedOutput()
   if err != nil {
 	  log.Fatalf("%s\n", out)
@@ -466,7 +466,7 @@ We run \ty{phylonium} with the given number of threads and store its
 output. Note that we construct the paths of the input files using the
 \ty{Glob} function of \ty{filepath}, because direct submission of an
 expandable name doesn't work---we are in Go, not in Unix. Also, in the
-actual run of \ty{phylonium} we ignore the error returned as this may
+actual run of \ty{phylonium} we ignore the error returned, as this may
 be non-zero if the homology is low, but a distance was still
 returned. This is a bit risky, but still better than obscurely failing
 whenever a mildly divergent sequence is included in the analysis.
