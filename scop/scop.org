@@ -763,7 +763,7 @@ We use \ty{scop} to score the primers in \ty{prim.fasta} using the
 sample database, \ty{sample}, and the target taxa in \ty{tarTax.txt}.
 #+end_export
 #+begin_src go <<Construct test, Pr. \ref{pr:sco}>>=
-  test := exec.Command("./scop", "-d", "sample",
+  test := exec.Command("./scop", "-d", "../data/sample",
 	  "-t", "tarTax.txt", "prim.fasta")
 #+end_src
 #+begin_export latex
