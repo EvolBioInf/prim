@@ -80,7 +80,8 @@ func parse(r io.Reader, args ...interface{}) {
 				}
 			}
 		}
-		cmd = exec.Command("blastdbcmd", "-db", db, "-entry_batch", f.Name())
+		cmd = exec.Command("blastdbcmd", "-db", db,
+			"-entry_batch", f.Name())
 		out, err = cmd.CombinedOutput()
 		if err != nil {
 			log.Fatalf("%s\n", out)
