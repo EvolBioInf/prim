@@ -16,6 +16,7 @@ $(prog)Doc.pdf: $(prog)Doc.tex $(SRC1) $(SRC2)
 	latex $(prog)Doc.tex
 	dvips $(prog)Doc -o -q
 	ps2pdf -dALLOWPSTRANSPARENCY $(prog)Doc.ps
+publish: $(prog)Doc.pdf
 	if [ -d /mnt/c/Users/haubold/ownCloud\ -\ haubold@evolbio.mpg.de@owncloud.gwdg.de/docs/ ]; then \
 		cp $(prog)Doc.pdf /mnt/c/Users/haubold/ownCloud\ -\ haubold@evolbio.mpg.de@owncloud.gwdg.de/docs/; \
 	fi
