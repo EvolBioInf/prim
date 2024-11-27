@@ -1,4 +1,4 @@
-# [`prim`](https://owncloud.gwdg.de/index.php/s/HoGv0q8FXumX6Vl)
+# [`prim`](https://owncloud.gwdg.de/index.php/s/qmxDc7CTTKaavbq)
 ## Description
 Programs for designing and testing
 primers.
