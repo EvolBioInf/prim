@@ -247,7 +247,7 @@ returns
   cmd := exec.Command("blastdbcmd")
   cmd.Args = args
   out, err := cmd.CombinedOutput()
-  util.Check(err)
+  util.CheckMsg(err, string(out))
 #+end_src
 #+begin_export latex
 We import \ty{fmt}, \ty{strings}, and \ty{exec}.
@@ -444,15 +444,7 @@ check the error it returns.
   cmd = exec.Command("blastn")
   cmd.Args = args
   out, err = cmd.CombinedOutput()
-  //<<Check Blast error, Pr. \ref{pr:sco}>>
-#+end_src
-#+begin_export latex
-If Blast returned an error, we print the output and quit.
-#+end_export
-#+begin_src go <<Check Blast error, Pr. \ref{pr:sco}>>=
-  if err != nil {
-	  log.Fatal(string(out))
-  }
+  util.CheckMsg(err, string(out))
 #+end_src
 #+begin_export latex
 We construct a map for storing the observed target accessions and a

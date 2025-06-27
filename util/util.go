@@ -34,6 +34,11 @@ func Check(err error) {
 		log.Fatal(err)
 	}
 }
+func CheckMsg(err error, msg string) {
+	if err != nil {
+		log.Fatal(msg)
+	}
+}
 func SetName(n string) {
 	name = n
 	s := fmt.Sprintf("%s: ", n)

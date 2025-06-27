@@ -84,6 +84,18 @@ We import \ty{log}.
   "log"
 #+end_src
 #+begin_export latex
+\subsubsection{\ty{CheckMsg}}
+!\ty{CheckMsg} takes as argument an error and a message. If the error
+!isn't nil, it prints the message and aborts.
+#+end_export
+#+begin_src go <<Functions, Pa.~\ref{pa:util}>>=
+  func CheckMsg(err error, msg string) {
+	  if err != nil {
+		  log.Fatal(msg)
+	  }
+  }
+#+end_src
+#+begin_export latex
 \subsection{\ty{SetName}}
 !The function \ty{SetName} sets the name of the program.
 It stores the name in a global variable and prepares the \ty{log}

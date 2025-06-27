@@ -387,9 +387,7 @@ terminated by a newline, which we remove, before we print it.
   cmd := exec.Command("blastdbcmd", "-db", db, "-entry", re,
 	  "-outfmt", "%a")
   out, err := cmd.CombinedOutput()
-  if err != nil {
-	  log.Fatalf("%s\n", out)
-  }
+  util.CheckMsg(err, string(out))
   re = string(out[:len(out)-1])
   fmt.Fprintf(f, "%s\n", re)
 #+end_src
@@ -432,9 +430,7 @@ corresponding to the accessions we just wrote to file.
   cmd = exec.Command("blastdbcmd", "-db", db,
 	  "-entry_batch", f.Name())
   out, err = cmd.CombinedOutput()
-  if err != nil {
-	  log.Fatalf("%s\n", out)
-  }
+  util.CheckMsg(err, string(out))
 #+end_src
 #+begin_export latex
 We iterate over the sequences returned by \ty{blastdbcmd} and write

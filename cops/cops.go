@@ -63,9 +63,7 @@ func parse(r io.Reader, args ...interface{}) {
 		cmd := exec.Command("blastdbcmd", "-db", db, "-entry", re,
 			"-outfmt", "%a")
 		out, err := cmd.CombinedOutput()
-		if err != nil {
-			log.Fatalf("%s\n", out)
-		}
+		util.CheckMsg(err, string(out))
 		re = string(out[:len(out)-1])
 		fmt.Fprintf(f, "%s\n", re)
 		keys := []string{"FalsePositives", "FalseNegatives"}
@@ -83,9 +81,7 @@ func parse(r io.Reader, args ...interface{}) {
 		cmd = exec.Command("blastdbcmd", "-db", db,
 			"-entry_batch", f.Name())
 		out, err = cmd.CombinedOutput()
-		if err != nil {
-			log.Fatalf("%s\n", out)
-		}
+		util.CheckMsg(err, string(out))
 		sc := fasta.NewScanner(bytes.NewReader(out))
 		for sc.ScanSequence() {
 			seq := sc.Sequence()

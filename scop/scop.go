@@ -88,7 +88,7 @@ func main() {
 	cmd := exec.Command("blastdbcmd")
 	cmd.Args = args
 	out, err := cmd.CombinedOutput()
-	util.Check(err)
+	util.CheckMsg(err, string(out))
 	cg := []byte("complete genome")
 	pl := []byte("plasmid")
 	entries := bytes.Split(out, []byte("\n"))
@@ -144,9 +144,7 @@ func main() {
 		cmd = exec.Command("blastn")
 		cmd.Args = args
 		out, err = cmd.CombinedOutput()
-		if err != nil {
-			log.Fatal(string(out))
-		}
+		util.CheckMsg(err, string(out))
 		otacc := make(map[string]bool)
 		hits := make([]*Hit, 0)
 		lines := bytes.Split(out, []byte("\n"))
