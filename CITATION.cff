@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: prim: Programs for designing and testing primers.
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Bernhard
+    family-names: Haubold
+    email: haubold@evolbio.mpg.de
+    affiliation: Max Planck Institute for Evolutionary Biology
+repository-code: 'https://github.com/evolBioInf/prim'
